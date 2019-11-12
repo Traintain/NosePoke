@@ -14,7 +14,7 @@ Stepper motorAgua(stepsPerRevolution, 8, 9, 10, 11);
 int stepCount = 0;  // number of steps the motor has taken
 int der;
 int izq;
-String COM;
+int COM=-1;
 bool metioNariz;
 float tIni;
 float tInterm;
@@ -29,8 +29,12 @@ void setup() {
   Serial.begin(9600);
   //Comprobar comunicación con PC
   Serial.println("Transmitiendo");
-  COM=Serial.read();
-  if(COM!="Recibiendo"){
+  while(COM==-1){
+    Serial.println(COM);
+    COM=Serial.read();
+    Serial.println(COM);
+  }
+  if(COM!=54){
     //Error en caso de que no haya comunicación
     Serial.println("Error");
   }else{
@@ -40,9 +44,10 @@ void setup() {
 }
 
 void loop() {
-   while(COM!="Inicio"){
+   while(COM!=57){
      COM=Serial.read();
    }
+   Serial.println("Van a empezar los 50 ensayos");
    //Haga 50 ensayos
    for(int i=0; i<50; i++){
      ensayo();
