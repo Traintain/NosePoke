@@ -1,7 +1,8 @@
+
 #include <Stepper.h>
 
 // change this to the number of steps on your motor
-#define STEPS 120
+#define STEPS 150
   
 // create an instance of the stepper class, specifying
 // the number of steps of the motor and the pins it's
@@ -18,8 +19,11 @@ void setup() {
 }
 
 void loop() {
-  stepper.step(STEPS);
-  delay(2000);
+  for(int i=0;i<4;i++){
+    stepper.step(STEPS);
+    delay(20);
+  }
+  delay(4000);
   a=digitalRead(3);
   Serial.println(a);
 }
