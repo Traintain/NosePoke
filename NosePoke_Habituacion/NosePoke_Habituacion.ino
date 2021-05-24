@@ -6,10 +6,11 @@
 const int IR_Right=3;
 const int IR_Left=4;
 //Conections for the Stepper Motor
-const int IN1 = 11;
-const int IN2 = 10;
-const int IN3 = 9;
-const int IN4 = 8;
+//const int IN1 = 11;
+//const int IN2 = 10;
+//const int IN3 = 9;
+//const int IN4 = 8;
+const int MOTOR=8;
 //Contecions for the LED lights
 const int LED_Right=5;
 const int LED_Left=6;
@@ -42,7 +43,7 @@ int omission;
 int category;
 
 //Object that represents the motor
-Stepper pump(nSteps, IN4,IN3,IN2,IN1);
+//Stepper pump(nSteps, IN4,IN3,IN2,IN1);
 
 int right;
 int left;
@@ -64,8 +65,10 @@ void setup() {
   pinMode(LED_Right, OUTPUT);
   pinMode(LED_Left, OUTPUT);
   pinMode(LED_center, OUTPUT);
+  pinMode(MOTOR, OUTPUT);
+  digitalWrite(MOTOR,HIGH);
   
-  pump.setSpeed(nSpeed);
+//  pump.setSpeed(nSpeed);
   Serial.begin(9600);
   //Comprobar comunicación con PC
   Serial.println("Transmitiendo");
@@ -84,11 +87,14 @@ void setup() {
 
 //Method to make the motor turn
 void motor(){
+  Serial.println("Iniciando un ciclo del motor");
   digitalWrite(LED_center,HIGH);
-    for(int i=0;i<4;i++){
-    pump.step(nSteps);
-    delay(20);
-  }
+  digitalWrite(MOTOR,LOW);
+  //Poner en 1000 al inicio para que llene la sonda rapidamente
+  //Poner en 20 para dispensar una gota
+  delay(20);
+  digitalWrite(MOTOR,HIGH);
+  delay(durReward);
   digitalWrite(LED_center,LOW);
 }
 
@@ -112,15 +118,23 @@ void loop() {
     delay(ITI);
     //Begin 50 trials
     for(int i=0; i<nTrials; i++){
-      Serial.println("Ensayo numero: "+i);
+      Serial.print("Ensayo numero: ");
+      Serial.println(i);
       trial();
-      Serial.println("Termina ensayo. Aciertos: "+success);
-      Serial.println("Porcentaje aciertos: "+(success/50));
-      Serial.println("Respuestas impulsivas"+impulsive);
-      Serial.println("Porcentaje respuestas impulsivas: "+(impulsive/50));
-      Serial.println("Omisiones: "+omission);
-      Serial.println("Porcentaje omisiones: "+(omission/50));
-      Serial.println("Categorias: "+category);
+      Serial.print("Termina ensayo. Aciertos: ");
+      Serial.println(success);
+      Serial.print("Porcentaje aciertos: ");
+      Serial.println(success/50);
+      Serial.print("Respuestas impulsivas");
+      Serial.println(impulsive);
+      Serial.print("Porcentaje respuestas impulsivas: ");
+      Serial.println(impulsive/50);
+      Serial.print("Omisiones: ");
+      Serial.println(omission);
+      Serial.print("Porcentaje omisiones: ");
+      Serial.println(omission/50);
+      Serial.print("Categorias: ");
+      Serial.println(category);
    }
   }
 }
@@ -141,29 +155,37 @@ void trial(){
     left=digitalRead(IR_Left);
     if(right==LOW){
       tLog=millis()-tIni;
-      msg="Metio la nariz en la derecha a los: "+tLog;
-      Serial.println(msg);
-      while(millis()-tLog<=durReward){
-        motor();
+      Serial.print("Metio la nariz en la derecha a los: ");
+      Serial.println(tLog);
+      motor();
+      while(right==LOW){
+        right=digitalRead(IR_Right);
       }
       metioNariz=true;
    }
-    if(left==LOW){
+   if(left==LOW){
       tLog=millis()-tIni;
-      msg="Metio la nariz en la izquierda a los: "+tLog;
-      Serial.println(msg);
+      Serial.print("Metio la nariz en la izquierda a los: ");
+      Serial.println(tLog);
       motor();
+      while(left==LOW){
+        left=digitalRead(IR_Left);
+      }
       metioNariz=true;
    }
   }
   digitalWrite(LED_Right,LOW);
   digitalWrite(LED_Left,LOW);
-  if(metioNariz=false){
+  if(metioNariz==false){
     omission++;
+    Serial.print("Omision numero:");
+    Serial.println(omission);
     sucesiveSuccess=0;
   }else{
     success++;
-    if(sucesiveSuccess=2)category++;
+    Serial.print("Exito numero:");
+    Serial.println(success);
+    if(sucesiveSuccess==2)category++;
     sucesiveSuccess++;
   }
   
@@ -174,25 +196,16 @@ void trial(){
   while((millis()-tInterm) < ITI){
     right=digitalRead(IR_Right);
     left=digitalRead(IR_Left);
-    if(right==LOW){
+    if(right==LOW || left==LOW){
       impulsive++;
-      msg="Perseveracion numero:";
-      Serial.println(persev);
-      while(right==LOW){
+      Serial.print("Perseveracion numero: ");
+      Serial.println(impulsive);
+      while(right==LOW || left==LOW){
         right=digitalRead(IR_Right);
+        left=digitalRead(IR_Left);
       }
       tInterm = millis();
       Serial.println("Inician de nuevo 10 s de espera");
     }
-    if(left==LOW){
-      impulsive++;
-      msg="Perseveracion numero:";
-      Serial.println(persev);
-      while(right==LOW){
-        right=digitalRead(IR_Right);
-      }
-      tInterm = millis();
-      Serial.println("Inician de nuevo 10 s de espera");
-   }
-}
+  }
 }

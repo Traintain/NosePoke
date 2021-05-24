@@ -1,29 +1,20 @@
-
-#include <Stepper.h>
-
-// change this to the number of steps on your motor
-#define STEPS 150
-  
-// create an instance of the stepper class, specifying
-// the number of steps of the motor and the pins it's
-// attached to
-Stepper stepper(STEPS, 8, 9, 10, 11);
-int a;
-
+//1. Conectar fuente a corriente
+//2.
 
 void setup() {
-  // set the speed of the motor to 30 RPMs
-  stepper.setSpeed(120);
-  pinMode(3,INPUT);
+  //Pines del relé
+  //VCC - 5V
+  //GND - GND
+  //IN - Pin 3
+  pinMode(3,OUTPUT);
   Serial.begin(9600);
 }
 
 void loop() {
-  for(int i=0;i<4;i++){
-    stepper.step(STEPS);
-    delay(20);
-  }
-  delay(4000);
-  a=digitalRead(3);
-  Serial.println(a);
+  digitalWrite(3, LOW);
+  //Poner en 1000 al inicio para que llene la sonda rapidamente
+  //Poner en 20 para dispensar una gota
+  delay(20);
+  digitalWrite(3,HIGH);
+  while(true){}
 }
