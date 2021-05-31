@@ -41,7 +41,7 @@ int goodRight;
 //Number of left correct choices
 int goodLeft;
 //mean of the latency of each block
-int latency;
+unsigned long latency;
 //temporal number for math
 int temp;
 
@@ -63,8 +63,8 @@ String msg="";
 
 void setup() {
   //Setup of the different pins
-  pinMode(IR_Right, INPUT);
-  pinMode(IR_Left, INPUT);
+    pinMode(IR_Right, INPUT);
+    pinMode(IR_Left, INPUT);
   pinMode(LED_Right, OUTPUT);
   pinMode(LED_Left, OUTPUT);
   pinMode(LED_center, OUTPUT);
