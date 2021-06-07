@@ -284,6 +284,7 @@ void trial(int i){
         sucesiveSuccess++;
       }else{
         //Fallo
+        digitalWrite(LED_Left,LOW);
         if(firstCorrect==0){
           errSelec++;
           Serial.println("Error de selección");
@@ -311,6 +312,7 @@ void trial(int i){
       Serial.println(tLog);
       if(isRight){
         //Fallo
+        digitalWrite(LED_Right,LOW);
         if(firstCorrect==0){
           errSelec++;
           Serial.println("Error de selección");
