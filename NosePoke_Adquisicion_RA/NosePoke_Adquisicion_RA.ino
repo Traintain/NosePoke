@@ -215,6 +215,10 @@ void loop() {
       }
       Serial.print(temp);
       Serial.println("%");
+      if(firstCorrect!=0){
+        Serial.print("El primer acierto fue en el intento: ");
+        Serial.println(firstCorrect);
+      }
       Serial.print("Adquisicion de reglas: ");
       temp=aciertoTemprano/17;
       Serial.println(temp);
@@ -236,7 +240,7 @@ void loop() {
   }
   while(true);
 }
-
+  
 //The instructions for each trial
 void trial(int i){
   metioNariz=false;
@@ -247,15 +251,16 @@ void trial(int i){
   Serial.println("Inicia ensayo");
   tIni=millis();
   
+  if(isRight){
+    digitalWrite(LED_Right,HIGH);
+    Serial.println("Se enciende la luz derecha");
+  }else{
+    digitalWrite(LED_Left,HIGH);
+    Serial.println("Se enciende la luz izquierda");
+  }
+  
   //Check fot 10 seconds if the animal inserts its nose
   while(( (millis()-tIni) < durTrial) && metioNariz==false){
-    if(isRight){
-      digitalWrite(LED_Right,HIGH);
-      Serial.println("Se enciende la luz derecha");
-    }else{
-      digitalWrite(LED_Left,HIGH);
-      Serial.println("Se enciende la luz izquierda");
-    }
     
     right=digitalRead(IR_Right);
     left=digitalRead(IR_Left);
@@ -275,7 +280,7 @@ void trial(int i){
         success++;
         if(i<=16){
           aciertoTemprano++;
-        }else if(i<=32){
+        }else if(i<=32 && i>16){
           aciertoIntermedio++;
         }else{
           aciertoFinal++;
@@ -337,6 +342,14 @@ void trial(int i){
           Serial.println(firstCorrect);
         }
         success++;
+        sucesiveSuccess++;
+        if(i<=16){
+          aciertoTemprano++;
+        }else if(i<=32 && i>16){
+          aciertoIntermedio++;
+        }else{
+          aciertoFinal++;
+        }
         if((sucesiveSuccess%3)==2)category++;
         sucesiveSuccess++;
       }
