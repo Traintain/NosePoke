@@ -198,7 +198,7 @@ void loop() {
             Serial.print("Errores de perseveración secundarios: ");
       Serial.println(EPS);
       Serial.print("Porcentaje errores de perseveración secundarios: ");
-      if(EPP!=0){
+      if(EPS!=0){
         temp=(EPP*100/EPS);
       }else{
         temp=0;
@@ -342,7 +342,6 @@ void trial(int i){
           Serial.println(firstCorrect);
         }
         success++;
-        sucesiveSuccess++;
         if(i<=16){
           aciertoTemprano++;
         }else if(i<=32 && i>16){
