@@ -1,5 +1,3 @@
-//This library allows to control the stepper motor
-
 //Pin conections
 //Infrared sensors on the holes
 const int IR_Right=4;
@@ -44,16 +42,16 @@ int goodLeft;
 unsigned long latency;
 //temporal number for math
 int temp;
-//Error de seleccion: numero de errores antes del primer acierto
-int errSelec;
-//Perseveracion primaria
-int EPP;
+//Error de regresion temprana: errores al inicio 
+int ERT;
+//Error de regresion perseverativo
+int ERP;
 //Perseveracion secundaria
 int EPS;
-//Aciertos por segmento
-int aciertoTemprano;
-int aciertoIntermedio;
-int aciertoFinal;
+//Errores por segmento
+int adquisicionRegla;
+int establecimientoRegla;
+int mantenimientoRegla;
 
 
 int right;
@@ -70,7 +68,7 @@ String msg="";
 
 //Number between 0 and 2, that indicates the side where the animal should drink
 long randomSide;
-bool isRight;
+bool turnOnRight;
 int firstCorrect;
 
 
@@ -134,12 +132,13 @@ void loop() {
     goodRight=0;
     latency=0;
     firstCorrect=0;
-    errSelec=0;
-    EPP=0;
+    ERT=0;
+    ERP=0;
     EPS=0;
-    aciertoTemprano=0;
-    aciertoIntermedio=0;
-    aciertoFinal=0;
+    adquisicionRegla=0;
+    establecimientoRegla=0;
+    mantenimientoRegla=0;
+
     
     Serial.print("Van a empezar los ");
     Serial.print(nTrials);
@@ -185,11 +184,11 @@ void loop() {
       }
       Serial.print(temp);
       Serial.println(" ms");
-      Serial.print("Errores de perseveración primarios: ");
-      Serial.println(EPP);
-      Serial.print("Porcentaje errores de perseveración primarios: ");
+      Serial.print("Errores de regresión perseverativos: ");
+      Serial.println(ERP);
+      Serial.print("Porcentaje errores de regresión perseverativos: ");
       if(success!=0){
-        temp=(EPP*100/success);
+        temp=(ERP*100/success);
       }else{
         temp=0;
       }
@@ -199,17 +198,17 @@ void loop() {
       Serial.println(EPS);
       Serial.print("Porcentaje errores de perseveración secundarios: ");
       if(EPS!=0){
-        temp=(EPP*100/EPS);
+        temp=(ERP*100/EPS);
       }else{
         temp=0;
       }
       Serial.print(temp);
       Serial.println("%");
-      Serial.print("Errores de seleccion: ");
-      Serial.println(errSelec);
-      Serial.print("Porcentaje errores de selección: ");
+      Serial.print("Errores de regresión temprana: ");
+      Serial.println(ERT);
+      Serial.print("Porcentaje errores de regresión temprana: ");
       if(firstCorrect!=0){
-        temp=(errSelec*100/firstCorrect);
+        temp=(ERT*100/firstCorrect);
       }else{
         temp=0;
       }
@@ -219,14 +218,14 @@ void loop() {
         Serial.print("El primer acierto fue en el intento: ");
         Serial.println(firstCorrect);
       }
-      Serial.print("Adquisicion de reglas: ");
-      temp=(aciertoTemprano*100)/17;
+      Serial.print("Adquisicion de nueva regla: ");
+      temp=(adquisicionRegla*100)/17;
       Serial.println(temp);
-      Serial.print("Establecimiento de reglas: ");
-      temp=(aciertoIntermedio*100)/16;
+      Serial.print("Establecimiento de nueva regla: ");
+      temp=(establecimientoRegla*100)/16;
       Serial.println(temp);
-      Serial.print("Mantenimiento de reglas: ");
-      temp=(aciertoFinal*100)/17;
+      Serial.print("Mantenimiento de nueva reglas: ");
+      temp=(mantenimientoRegla*100)/17;
       Serial.println(temp);
       Serial.println("--------------------------------------------------");
       if(i==49){
@@ -246,12 +245,12 @@ void trial(int i){
   metioNariz=false;
 
   randomSide=random(0,2);
-  isRight=randomSide<1;
+  turnOnRight=randomSide<1;
   
   Serial.println("Inicia ensayo");
   tIni=millis();
   
-  if(isRight){
+  if(turnOnRight){
     digitalWrite(LED_Right,HIGH);
     Serial.println("Se enciende la luz derecha");
   }else{
@@ -259,7 +258,7 @@ void trial(int i){
     Serial.println("Se enciende la luz izquierda");
   }
   
-  //Check fot 10 seconds if the animal inserts its nose
+  //Check for 10 seconds if the animal inserts its nose
   while(( (millis()-tIni) < durTrial) && metioNariz==false){
     
     right=digitalRead(IR_Right);
@@ -268,39 +267,41 @@ void trial(int i){
       tLog=millis()-tIni;
       Serial.print("Metio la nariz en la derecha a los: ");
       Serial.println(tLog);
-      if(isRight){
-        digitalWrite(LED_Right,LOW);
-        motor();
+      if(!turnOnRight){
         //Exito
+        digitalWrite(LED_Left,LOW);
+        motor();
         if(firstCorrect==0){
           firstCorrect=i+1;
           Serial.print("Primer acierto en el intento: ");
           Serial.println(firstCorrect);
         }
         success++;
-        if(i<=16){
-          aciertoTemprano++;
-        }else if(i<=32 && i>16){
-          aciertoIntermedio++;
-        }else{
-          aciertoFinal++;
-        }
         if((sucesiveSuccess%3)==2)category++;
         sucesiveSuccess++;
       }else{
         //Fallo
-        digitalWrite(LED_Left,LOW);
+        digitalWrite(LED_Right,LOW);
         if(firstCorrect==0){
-          errSelec++;
-          Serial.println("Error de selección");
+          ERT++;
+          Serial.println("Error de regresión temprano");
+          if(i<=16){
+            adquisicionRegla++;
+          }
         }else{
           if(sucesiveSuccess!=0){
-            EPP++;
-            Serial.println("Error de perseveración primaria");
+            ERP++;
+            Serial.println("Error de regresión perseverativo");
             sucesiveSuccess=0;
           }else{
             EPS++;
             Serial.println("Error de perseveración secundaria");
+          }
+
+          if(i<=32 && i>16){
+            establecimientoRegla++;
+          }else{
+            mantenimientoRegla++;
           }
         }
       }
@@ -315,25 +316,34 @@ void trial(int i){
       tLog=millis()-tIni;
       Serial.print("Metio la nariz en la izquierda a los: ");
       Serial.println(tLog);
-      if(isRight){
+      if(!turnOnRight){
         //Fallo
-        digitalWrite(LED_Right,LOW);
+        digitalWrite(LED_Left,LOW);
         if(firstCorrect==0){
-          errSelec++;
-          Serial.println("Error de selección");
+          ERT++;
+          Serial.println("Error de regresión temprana");
+          if(i<=16){
+            adquisicionRegla++;
+          }
         }else{
           if(sucesiveSuccess!=0){
-            EPP++;
-            Serial.println("Error de perseveración primaria");
+            ERP++;
+            Serial.println("Error de regresión perseverativo");
             sucesiveSuccess=0;
           }else{
             EPS++;
             Serial.println("Error de perseveración secundaria");
           }
+
+          if(i<=32 && i>16){
+            establecimientoRegla++;
+          }else{
+            mantenimientoRegla++;
+          }
         }
       }else{
         //Exito
-        digitalWrite(LED_Left,LOW);
+        digitalWrite(LED_Right,LOW);
         motor();
         //Exito
         if(firstCorrect==0){
@@ -342,13 +352,6 @@ void trial(int i){
           Serial.println(firstCorrect);
         }
         success++;
-        if(i<=16){
-          aciertoTemprano++;
-        }else if(i<=32 && i>16){
-          aciertoIntermedio++;
-        }else{
-          aciertoFinal++;
-        }
         if((sucesiveSuccess%3)==2)category++;
         sucesiveSuccess++;
       }
