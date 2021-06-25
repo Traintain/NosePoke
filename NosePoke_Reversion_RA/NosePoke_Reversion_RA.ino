@@ -28,8 +28,8 @@ const int durReward=3000;
 //Output constants
 //Number of successful trials. Can be up to 50 por block.
 int success;
-//Number of impulsive responses. An impulsive response is when the animal inserts its nose during the ITI
-int impulsive;
+//Time spend on impulsive responses. An impulsive response is when the animal inserts its nose during the ITI
+unsigned long impulsive;
 //Number of omissions. An omision response is when the animal doesn't inster its nose during a trial
 int omission;
 //Number of categories. A category is when a animal has 3 successes in a row.
@@ -41,7 +41,7 @@ int goodLeft;
 //mean of the latency of each block
 unsigned long latency;
 //temporal number for math
-int temp;
+double temp;
 //Error de regresion temprana: errores al inicio 
 int ERT;
 //Error de regresion perseverativo
@@ -62,7 +62,6 @@ int sucesiveSuccess;
 bool metioNariz;
 unsigned long tIni;
 unsigned long tInterm;
-unsigned long persev;
 unsigned long tLog;
 String msg="";
 
@@ -162,12 +161,13 @@ void loop() {
       temp=(success*100/nTrials);
       Serial.print(temp);
       Serial.println("%");
-      Serial.print("Respuestas impulsivas: ");
-      Serial.println(impulsive);
-      Serial.print("Porcentaje respuestas impulsivas: ");
-      temp=(impulsive*100/nTrials);
-      Serial.print(temp);
-      Serial.println("%");
+      Serial.print("Tiempo total en Respuestas impulsivas: ");
+      temp=impulsive/1000;
+      Serial.println(temp);
+      //Serial.print("Porcentaje respuestas impulsivas: ");
+      //temp=(impulsive*100/nTrials);
+      //Serial.print(temp);
+      //Serial.println("%");
       Serial.print("Omisiones: ");
       Serial.println(omission);
       Serial.print("Porcentaje omisiones: ");
@@ -385,13 +385,14 @@ void trial(int i){
     right=digitalRead(IR_Right);
     left=digitalRead(IR_Left);
     if(right==LOW || left==LOW){
-      impulsive++;
-      Serial.print("Perseveracion numero: ");
-      Serial.println(impulsive);
+      //impulsive++;
+      tIni=millis();
+      Serial.println("Inicio de respuesta impulsiva");      
       while(right==LOW || left==LOW){
         right=digitalRead(IR_Right);
         left=digitalRead(IR_Left);
       }
+      impulsive+=millis()-tIni;
       tInterm = millis();
       Serial.println("Inician de nuevo ");
       Serial.print(ITIsec);
