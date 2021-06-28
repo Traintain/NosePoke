@@ -1,4 +1,5 @@
 //This library allows to control the stepper motor
+//Use this code when the preference side is the Left one
 
 //Pin conections
 //Infrared sensors on the holes
@@ -28,6 +29,10 @@ const int durTrial=10000;
 const int durReward=3000;
 
 //Output constants
+//Acierto congruente
+int aciertoCongruente;
+//Acierto incongruente
+int aciertoIncongruente;
 //Number of successful trials. Can be up to 50 por block.
 int success;
 //Time spend on impulsive responses. An impulsive response is when the animal inserts its nose during the ITI
@@ -44,9 +49,17 @@ int goodLeft;
 unsigned long latency;
 //temporal number for math
 double temp;
+//Número total de errores congruentes
+int errorCongruente;
+//Número total de errores incongruentes
+int errorIncongruente;
+//Número total de errores
+int error;
+//Aciertos por segmento
+int aciertoTemprano;
+int aciertoIntermedio;
+int aciertoFinal;
 
-//Object that represents the motor
-//Stepper pump(nSteps, IN4,IN3,IN2,IN1);
 
 int right;
 int left;
@@ -54,23 +67,26 @@ int COM=-1;
 //Integer that counts the number of consecutives succeses
 int sucesiveSuccess;
 bool metioNariz;
-unsigned long inicio;
-unsigned long fin;
 unsigned long tIni;
 unsigned long tInterm;
 unsigned long tLog;
 String msg="";
 
+//Number between 0 and 2, that indicates the side where the animal should drink
+long randomSide;
+bool isRight;
+
 
 void setup() {
   //Setup of the different pins
-    pinMode(IR_Right, INPUT);
-    pinMode(IR_Left, INPUT);
+  pinMode(IR_Right, INPUT);
+  pinMode(IR_Left, INPUT);
   pinMode(LED_Right, OUTPUT);
   pinMode(LED_Left, OUTPUT);
   pinMode(LED_center, OUTPUT);
   pinMode(MOTOR, OUTPUT);
   digitalWrite(MOTOR,HIGH);
+  randomSeed(analogRead(0));
   
 //  pump.setSpeed(nSpeed);
   Serial.begin(9600);
@@ -112,6 +128,8 @@ void loop() {
    for(int j=0; j<nBlocks;j++){
     //Reset the output counters
     success=0;
+    aciertoCongruente=0;
+    aciertoIncongruente=0;
     impulsive=0;
     omission=0;
     category=0;
@@ -120,22 +138,43 @@ void loop() {
     goodLeft=0;
     goodRight=0;
     latency=0;
+    error=0;
+    errorCongruente=0;
+    errorIncongruente=0;
     
-    Serial.println("Van a empezar los 50 ensayos");
+    
+    aciertoTemprano=0;
+    aciertoIntermedio=0;
+    aciertoFinal=0;
+    
+    Serial.print("Van a empezar los ");
+    Serial.print(nTrials);
+    Serial.println(" ensayos");
     //Wait 5 seconds for habituation
     delay(ITI);
     //Begin 50 trials
-    inicio=millis();
     for(int i=0; i<nTrials; i++){
       Serial.print("Ensayo numero: ");
       temp=i+1;
       Serial.println(temp);
-      trial();
+      trial(i);
       Serial.println("Termina ensayo.");
       if(i==49){
         Serial.println("***********************************");
         }
       Serial.println("--------------------------------------------------");
+      Serial.print("Aciertos congruentes: ");
+      Serial.println(aciertoCongruente);
+      Serial.print("Porcentaje aciertos congruentes: ");
+      temp=(aciertoCongruente*100/success);
+      Serial.print(temp);
+      Serial.println("%");
+      Serial.print("Aciertos incongruentes: ");
+      Serial.println(aciertoIncongruente);
+      Serial.print("Porcentaje aciertos incongruentes: ");
+      temp=(aciertoIncongruente*100/success);
+      Serial.print(temp);
+      Serial.println("%");
       Serial.print("Aciertos: ");
       Serial.println(success);
       Serial.print("Porcentaje aciertos: ");
@@ -157,10 +196,6 @@ void loop() {
       Serial.println("%");
       Serial.print("Categorias: ");
       Serial.println(category);
-      Serial.print("Total correctas a la derecha: ");
-      Serial.println(goodRight);
-      Serial.print("Total correctas a la izquierda: ");
-      Serial.println(goodLeft);
       Serial.print("La latencia promedio es de: ");
       if(success!=0){
         temp=latency/success;
@@ -169,14 +204,44 @@ void loop() {
       }
       Serial.print(temp);
       Serial.println(" ms");
+      
+      Serial.print("Errores congruentes: ");
+      Serial.println(errorCongruente);
+      Serial.print("Porcentaje errores congruentes: ");
+      if(error!=0){
+        temp=(errorCongruente/error);
+      }else{
+        temp=0;
+      }
+      Serial.print(temp);
+      Serial.println("%");
+      Serial.print("Errores incongruentes: ");
+      Serial.println(errorIncongruente);
+      Serial.print("Porcentaje errores incongruentes: ");
+      if(error!=0){
+        temp=(errorIncongruente/error);
+      }else{
+        temp=0;
+      }
+      Serial.print(temp);
+      Serial.println("%");
+      Serial.print("Errores: ");
+      Serial.println(error);
+      Serial.print("Porcentaje errores: ");
+      temp=(error*100/nTrials);
+      Serial.print(temp);
+      Serial.println("%");
+      Serial.print("Adquisicion de reglas: ");
+      temp=(aciertoTemprano*100)/17;
+      Serial.println(temp);
+      Serial.print("Establecimiento de reglas: ");
+      temp=(aciertoIntermedio*100)/16;
+      Serial.println(temp);
+      Serial.print("Mantenimiento de reglas: ");
+      temp=(aciertoFinal*100)/17;
+      Serial.println(temp);
       Serial.println("--------------------------------------------------");
       if(i==49){
-        if(goodRight>goodLeft){
-          Serial.println("El lado preferente es el derecho");
-        }else{
-          Serial.println("El lado preferente es el izquierdo");
-        }
-        
         Serial.println("***********************************");
         }
       
@@ -187,50 +252,84 @@ void loop() {
   }
   while(true);
 }
-
+  
 //The instructions for each trial
-void trial(){
+void trial(int i){
   metioNariz=false;
+
+  randomSide=random(0,2);
+  isRight=randomSide<1;
   
   Serial.println("Inicia ensayo");
   tIni=millis();
   
+  if(isRight){
+    digitalWrite(LED_Right,HIGH);
+    Serial.println("Se enciende la luz derecha");
+  }else{
+    digitalWrite(LED_Left,HIGH);
+    Serial.println("Se enciende la luz izquierda");
+  }
+  
   //Check fot 10 seconds if the animal inserts its nose
   while(( (millis()-tIni) < durTrial) && metioNariz==false){
-    digitalWrite(LED_Right,HIGH);
-    digitalWrite(LED_Left,HIGH);
-    //Serial.println(millis()-tIni);
+    
     right=digitalRead(IR_Right);
     left=digitalRead(IR_Left);
-    if(right==LOW){
+    //Exito
+    if(left==LOW){
       tLog=millis()-tIni;
-      Serial.print("Metio la nariz en la derecha a los: ");
+      Serial.print("Metio la nariz en la izquierda a los: ");
       Serial.println(tLog);
-      digitalWrite(LED_Right,LOW);
-      digitalWrite(LED_Left,LOW);
+      if(isRight){
+        digitalWrite(LED_Right,LOW);
+        aciertoIncongruente++;
+      }else{
+        digitalWrite(LED_Left,LOW);
+        aciertoCongruente++;
+      }
       motor();
+      success++;
+        
+        if(i<=16){
+          aciertoTemprano++;
+        }else if(i<=32 && i>16){
+          aciertoIntermedio++;
+        }else{
+          aciertoFinal++;
+        }
+        if((sucesiveSuccess%3)==2)category++;
+        sucesiveSuccess++;
+      
       while(right==LOW){
         right=digitalRead(IR_Right);
       }
       latency+=tLog;
-      goodRight++;
       metioNariz=true;
    }
-   if(left==LOW){
+
+   if(right==LOW){
+    //Fallo
       tLog=millis()-tIni;
-      Serial.print("Metio la nariz en la izquierda a los: ");
+      Serial.print("Metio la nariz en la derecha a los: ");
       Serial.println(tLog);
-      digitalWrite(LED_Right,LOW);
-      digitalWrite(LED_Left,LOW);
-      motor();
+      if(isRight){
+        digitalWrite(LED_Right,LOW);
+        errorCongruente++;
+      }else{
+        digitalWrite(LED_Left,LOW);
+        errorIncongruente++;
+      }
+      error++;
       while(left==LOW){
         left=digitalRead(IR_Left);
       }
       latency+=tLog;
-      goodLeft++;
       metioNariz=true;
    }
   }
+
+  //------------------------
   if(metioNariz==false){
     digitalWrite(LED_Right,LOW);
     digitalWrite(LED_Left,LOW);
@@ -238,13 +337,9 @@ void trial(){
     Serial.print("Omision numero:");
     Serial.println(omission);
     sucesiveSuccess=0;
-  }else{
-    success++;
-    Serial.print("Exito numero:");
-    Serial.println(success);
-    if((sucesiveSuccess%3)==2)category++;
-    sucesiveSuccess++;
   }
+  //------------------------
+
   
   //El animal debe esperar 10 segundos antes de volver a meter la nariz
   //Si la mete antes se reinicia la cuenta
