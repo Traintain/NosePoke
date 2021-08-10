@@ -44,6 +44,10 @@ int goodLeft;
 unsigned long latency;
 //temporal number for math
 double temp;
+//Global max continious correct responses
+int globalMax;
+//Local max continious correct responses
+int localMax;
 
 //Object that represents the motor
 //Stepper pump(nSteps, IN4,IN3,IN2,IN1);
@@ -120,6 +124,8 @@ void loop() {
     goodLeft=0;
     goodRight=0;
     latency=0;
+    localMax=0;
+    globalMax=0;
     
     Serial.println("Van a empezar los 50 ensayos");
     //Wait 5 seconds for habituation
@@ -169,6 +175,8 @@ void loop() {
       }
       Serial.print(temp);
       Serial.println(" ms");
+      Serial.print("Maximo de aciertos seguidos: ");
+      Serial.println(globalMax);
       Serial.println("--------------------------------------------------");
       if(i==49){
         if(goodRight>goodLeft){
@@ -238,12 +246,15 @@ void trial(){
     Serial.print("Omision numero:");
     Serial.println(omission);
     sucesiveSuccess=0;
+    localMax=0;
   }else{
     success++;
     Serial.print("Exito numero:");
     Serial.println(success);
     if((sucesiveSuccess%3)==2)category++;
     sucesiveSuccess++;
+    localMax++;
+    if(localMax > globalMax) globalMax = localMax;
   }
   
   //El animal debe esperar 10 segundos antes de volver a meter la nariz

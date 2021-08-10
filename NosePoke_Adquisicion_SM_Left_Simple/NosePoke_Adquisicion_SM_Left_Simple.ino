@@ -51,6 +51,10 @@ int error;
 int aciertoTemprano;
 int aciertoIntermedio;
 int aciertoFinal;
+//Global max continious correct responses
+int globalMax;
+//Local max continious correct responses
+int localMax;
 
 
 int right;
@@ -126,6 +130,8 @@ void loop() {
     goodRight=0;
     latency=0;
     error=0;
+    localMax=0;
+    globalMax=0;
     
     
     aciertoTemprano=0;
@@ -192,6 +198,8 @@ void loop() {
       Serial.print("Mantenimiento de reglas: ");
       temp=(aciertoFinal*100)/17;
       Serial.println(temp);
+      Serial.print("Maximo de aciertos seguidos: ");
+      Serial.println(globalMax);
       Serial.println("--------------------------------------------------");
       if(i==49){
         Serial.println("***********************************");
@@ -240,6 +248,9 @@ void trial(int i){
         }
         if((sucesiveSuccess%3)==2)category++;
         sucesiveSuccess++;
+        
+        localMax++;
+        if(localMax > globalMax) globalMax = localMax;
       
       while(right==LOW){
         right=digitalRead(IR_Right);
@@ -256,6 +267,8 @@ void trial(int i){
       digitalWrite(LED_Right,LOW);
       digitalWrite(LED_Left,LOW);
       error++;
+      sucesiveSuccess=0;
+      localMax=0;
       while(left==LOW){
         left=digitalRead(IR_Left);
       }
