@@ -76,7 +76,6 @@ void setup() {
   pinMode(MOTOR, OUTPUT);
   digitalWrite(MOTOR,HIGH);
   
-//  pump.setSpeed(nSpeed);
   Serial.begin(9600);
   //Comprobar comunicación con PC
   Serial.println("Transmitiendo");
@@ -95,7 +94,7 @@ void setup() {
 
 //Method to make the motor turn
 void motor(){
-  Serial.println("Iniciando un ciclo del motor");
+  //Serial.println("Iniciando un ciclo del motor");
   digitalWrite(LED_center,HIGH);
   digitalWrite(MOTOR,LOW);
   //Poner en 1000 al inicio para que llene la sonda rapidamente
@@ -130,68 +129,107 @@ void loop() {
     Serial.println("Van a empezar los 50 ensayos");
     //Wait 5 seconds for habituation
     delay(ITI);
+    Serial.println("Ensayo,Aciertos,Porcentaje aciertos,Tiempo total en Respuestas impulsivas,Omisiones,Porcentaje omisiones,Categorias,Total correctas a la derecha,Total correctas a la izquierda,Latencia promedio,Maximo de aciertos seguidos");
     //Begin 50 trials
     inicio=millis();
     for(int i=0; i<nTrials; i++){
-      Serial.print("Ensayo numero: ");
-      temp=i+1;
-      Serial.println(temp);
+
+      
+      //Serial.print("Ensayo numero: ");
+      
       trial();
-      Serial.println("Termina ensayo.");
-      if(i==49){
-        Serial.println("***********************************");
-        }
-      Serial.println("--------------------------------------------------");
-      Serial.print("Aciertos: ");
-      Serial.println(success);
-      Serial.print("Porcentaje aciertos: ");
+      //Serial.println("Termina ensayo.");
+      //Imprime el ensayo
+      temp=i+1;
+      Serial.print(temp);
+      Serial.print(",");
+      //Imprime los aciertos
+      Serial.print(success);
+      Serial.print(",");
+      //Imprime el porcentaje de aciertos
       temp=(success*100/nTrials);
       Serial.print(temp);
-      Serial.println("%");
-      Serial.print("Tiempo total en Respuestas impulsivas: ");
+      Serial.print(",");
+      //Imprime el tiempo total de respuestas impulsivas
       temp=impulsive/1000;
-      Serial.println(temp);
-      //Serial.print("Porcentaje respuestas impulsivas: ");
-      //temp=(impulsive*100/nTrials);
-      //Serial.print(temp);
-      //Serial.println("%");
-      Serial.print("Omisiones: ");
-      Serial.println(omission);
-      Serial.print("Porcentaje omisiones: ");
+      Serial.print(temp);
+      Serial.print(",");
+      //Imprime las omisiones
+      Serial.print(omission);
+      Serial.print(",");
+      //Imprime el porcentaje de omisiones
       temp=(omission*100/nTrials);
       Serial.print(temp);
-      Serial.println("%");
-      Serial.print("Categorias: ");
-      Serial.println(category);
-      Serial.print("Total correctas a la derecha: ");
-      Serial.println(goodRight);
-      Serial.print("Total correctas a la izquierda: ");
-      Serial.println(goodLeft);
-      Serial.print("La latencia promedio es de: ");
+      Serial.print(",");
+      //Imprime las categorias
+      Serial.print(category);
+      Serial.print(",");
+      //Imprime las correctas a la derecha
+      Serial.print(goodRight);
+      Serial.print(",");
+      //Imprime las correctas a la izquierda
+      Serial.print(goodLeft);
+      Serial.print(",");
+      //Imprime la latencia promedio
       if(success!=0){
         temp=latency/success;
       }else{
         temp=0;
       }
       Serial.print(temp);
-      Serial.println(" ms");
-      Serial.print("Maximo de aciertos seguidos: ");
+      Serial.print(",");
+      //Imprime el maximo de aciertos seguidos
       Serial.println(globalMax);
-      Serial.println("--------------------------------------------------");
       if(i==49){
+        Serial.println();
+        Serial.println("***********************************");
+        Serial.print("Ensayo numero: ");
+        temp=i+1;
+        Serial.println(temp);
+        Serial.print("Aciertos: ");
+        Serial.println(success);
+        Serial.print("Porcentaje aciertos: ");
+        temp=(success*100/nTrials);
+        Serial.print(temp);
+        Serial.println("%");
+        Serial.print("Tiempo total en Respuestas impulsivas: ");
+        temp=impulsive/1000;
+        Serial.print(temp);
+        Serial.println(" s");        
+        Serial.print("Omisiones: ");
+        Serial.println(omission);        
+        Serial.print("Porcentaje omisiones: ");
+        temp=(omission*100/nTrials);
+        Serial.print(temp);
+        Serial.println("%");
+        Serial.print("Categorias: ");
+        Serial.println(category);        
+        Serial.print("Total correctas a la derecha: ");
+        Serial.println(goodRight);
+        Serial.print("Total correctas a la izquierda: ");
+        Serial.println(goodLeft);        
+        Serial.print("La latencia promedio es de: ");
+        if(success!=0){
+          temp=latency/success;
+        }else{
+          temp=0;
+        }
+        Serial.print(temp);
+        Serial.println(" ms");
+        Serial.print("Maximo de aciertos seguidos: ");
+        Serial.println(globalMax);
+        Serial.println();
+        
         if(goodRight>goodLeft){
           Serial.println("El lado preferente es el derecho");
         }else{
           Serial.println("El lado preferente es el izquierdo");
         }
-        
         Serial.println("***********************************");
-        }
+      }
       
    }
    Serial.println("Terminan bloque de 50 ensayos");
-   Serial.println();
-   Serial.println();
   }
   while(true);
 }
@@ -200,7 +238,7 @@ void loop() {
 void trial(){
   metioNariz=false;
   
-  Serial.println("Inicia ensayo");
+  //Serial.println("Inicia ensayo");
   tIni=millis();
   
   //Check fot 10 seconds if the animal inserts its nose
@@ -212,8 +250,8 @@ void trial(){
     left=digitalRead(IR_Left);
     if(right==LOW){
       tLog=millis()-tIni;
-      Serial.print("Metio la nariz en la derecha a los: ");
-      Serial.println(tLog);
+      //Serial.print("Metio la nariz en la derecha a los: ");
+      //Serial.println(tLog);
       digitalWrite(LED_Right,LOW);
       digitalWrite(LED_Left,LOW);
       motor();
@@ -226,8 +264,8 @@ void trial(){
    }
    if(left==LOW){
       tLog=millis()-tIni;
-      Serial.print("Metio la nariz en la izquierda a los: ");
-      Serial.println(tLog);
+      //Serial.print("Metio la nariz en la izquierda a los: ");
+      //Serial.println(tLog);
       digitalWrite(LED_Right,LOW);
       digitalWrite(LED_Left,LOW);
       motor();
@@ -243,14 +281,14 @@ void trial(){
     digitalWrite(LED_Right,LOW);
     digitalWrite(LED_Left,LOW);
     omission++;
-    Serial.print("Omision numero:");
-    Serial.println(omission);
+    //Serial.print("Omision numero:");
+    //Serial.println(omission);
     sucesiveSuccess=0;
     localMax=0;
   }else{
     success++;
-    Serial.print("Exito numero:");
-    Serial.println(success);
+    //Serial.print("Exito numero:");
+    //Serial.println(success);
     if((sucesiveSuccess%3)==2)category++;
     sucesiveSuccess++;
     localMax++;
@@ -259,9 +297,9 @@ void trial(){
   
   //El animal debe esperar 10 segundos antes de volver a meter la nariz
   //Si la mete antes se reinicia la cuenta
-  Serial.print("Fin ensayo, inician ");
-  Serial.print(ITIsec);
-  Serial.println(" s de intervalo entre estímulos");
+  //Serial.print("Fin ensayo, inician ");
+  //Serial.print(ITIsec);
+  //Serial.println(" s de intervalo entre estímulos");
   tInterm=millis();
   while((millis()-tInterm) < ITI){
     right=digitalRead(IR_Right);
@@ -269,16 +307,16 @@ void trial(){
     if(right==LOW || left==LOW){
       //impulsive++;
       tIni=millis();
-      Serial.println("Inicio de respuesta impulsiva");
+      //Serial.println("Inicio de respuesta impulsiva");
       while(right==LOW || left==LOW){
         right=digitalRead(IR_Right);
         left=digitalRead(IR_Left);
       }
       impulsive+=millis()-tIni;
       tInterm = millis();
-      Serial.println("Inician de nuevo ");
-      Serial.print(ITIsec);
-      Serial.println(" s de espera");
+      //Serial.println("Inician de nuevo ");
+      //Serial.print(ITIsec);
+      //Serial.println(" s de espera");
     }
   }
 }
