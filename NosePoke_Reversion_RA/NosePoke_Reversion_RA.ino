@@ -53,6 +53,11 @@ int adquisicionRegla;
 int establecimientoRegla;
 int mantenimientoRegla;
 
+//Global max continious correct responses
+int globalMax;
+//Local max continious correct responses
+int localMax;
+
 
 int right;
 int left;
@@ -137,6 +142,8 @@ void loop() {
     adquisicionRegla=0;
     establecimientoRegla=0;
     mantenimientoRegla=0;
+    localMax=0;
+    globalMax=0;
 
     
     Serial.print("Van a empezar los ");
@@ -227,6 +234,8 @@ void loop() {
       Serial.print("Mantenimiento de nueva reglas: ");
       temp=(mantenimientoRegla*100)/17;
       Serial.println(temp);
+      Serial.print("Maximo de aciertos seguidos: ");
+      Serial.println(globalMax);
       Serial.println("--------------------------------------------------");
       if(i==49){
         Serial.println("***********************************");
@@ -279,6 +288,9 @@ void trial(int i){
         success++;
         if((sucesiveSuccess%3)==2)category++;
         sucesiveSuccess++;
+
+        localMax++;
+        if(localMax > globalMax) globalMax = localMax;
       }else{
         //Fallo
         digitalWrite(LED_Right,LOW);
@@ -293,6 +305,7 @@ void trial(int i){
             ERP++;
             Serial.println("Error de regresión perseverativo");
             sucesiveSuccess=0;
+            localMax=0;
           }else{
             EPS++;
             Serial.println("Error de perseveración secundaria");
@@ -330,6 +343,7 @@ void trial(int i){
             ERP++;
             Serial.println("Error de regresión perseverativo");
             sucesiveSuccess=0;
+            localMax=0;
           }else{
             EPS++;
             Serial.println("Error de perseveración secundaria");
@@ -354,6 +368,9 @@ void trial(int i){
         success++;
         if((sucesiveSuccess%3)==2)category++;
         sucesiveSuccess++;
+        
+        localMax++;
+        if(localMax > globalMax) globalMax = localMax;
       }
       while(left==LOW){
         left=digitalRead(IR_Left);
