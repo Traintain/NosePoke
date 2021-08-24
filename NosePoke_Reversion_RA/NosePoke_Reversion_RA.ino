@@ -307,11 +307,11 @@ void loop() {
         Serial.println(temp);
         Serial.print("Maximo de aciertos seguidos: ");
         Serial.println(globalMax);
-        }
         if(firstCorrect!=0){
           Serial.print("El primer acierto fue en el intento: ");
           Serial.println(firstCorrect);
         }
+       }
       }
    Serial.println("Terminan bloque de 50 ensayos");
   }
