@@ -135,10 +135,13 @@ def estandarizarTerminosTipoDePrueba(data):
                  "SMM_ADQ_DER":"SM_ADQ_DER",
                  "P_IZQ":"SM_ADQ_IZQ","SM_P_IZQ":"SM_ADQ_IZQ","SM_IZQ_ADQ":"SM_ADQ_IZQ",
                  "SM_IZQ":"SM_ADQ_IZQ","SM_PRE_IZQ":"SM_ADQ_IZQ",
+                 
                  "R_DER":"SM_REV_DER","SM_R_DER":"SM_REV_DER",
                  "R_IZQ":"SM_REV_IZQ","SM_R_IZQ":"SM_REV_IZQ",
-                 "DIS":"RA_ADQ", "DIS_AZ":"RA_ADQ", "ADQ_AZ":"RA_ADQ","SM_DIS_AZ":"RA_ADQ",
-                 "REV_AZ":"RA_REV", "RA":"RA_REV", "REV":"RA_REV", "R_AZ":"RA_REV", 
+                 
+                 "DIS":"RA_ADQ", "DIS_AZ":"RA_ADQ", "ADQ_AZ":"RA_ADQ",
+                 
+                 "REV_AZ":"RA_REV", "RA":"RA_REV", "REV":"RA_REV", "R_AZ":"RA_REV",
                  }
     cleanData['tipoPrueba'].replace(to_replace=replaceDict, inplace=True)
     return cleanData
