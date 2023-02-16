@@ -29,7 +29,7 @@ def listaDeRegistros(base):
             registros.append(base+i)
     return registros
 
-def listaDeAnimales(registros):
+def listaDeAnimales(registros, sexChar):
     """
     Toma el nombre de archivo de un registro y la divide, extrayendo los datos
     correspondientes, asumiendo que cumple con la convención de formato
@@ -37,14 +37,11 @@ def listaDeAnimales(registros):
     
     Parameters:
     registros (Array of str): lista de registros
+    sexo (Char): Caracter que puede ser 'H' para hembras y 'M' para machos
 
     Returns:
     data (Pandas dataframe): dataframe de pandas con los datos de cada registro
    """
-    if hembras:
-        sexChar='H'
-    else:
-        sexChar='M'
    
     dia=[]
     mes=[]
@@ -56,64 +53,78 @@ def listaDeAnimales(registros):
     diaEnsayo=[]
     bloque=[]
     nombreArchivo=[]
+    etiqueta=[]
+    
     for registro in registros:
         try:
             # Ejemplo de registro '3.12.2021.H_C21_5_REV_AZ_D8_B1.docx'
-            temp=registro.split("/")[-1:][0].split(".")
+            direccion=registro.split("/")[-1:][0].split(".")
+            
             # '3' '12' '2021'
-            dia.append(int(temp[0]))
-            mes.append(int(temp[1]))
-            año.append(int(temp[2]))
+            dia.append(int(direccion[0]))
+            mes.append(int(direccion[1]))
+            año.append(int(direccion[2]))
+            
             # 'H_C21_5_REV_AZ_D8_B1'
-            temp1=temp[3].strip().split('_')
-            temp2=[]
-            for i in temp1:
-                temp2+=i.split(' ')
-            temp1=temp2.copy()
-                
-            incluyeSexo=0
-            if temp1[0].find(sexChar)==-1:
-                incluyeSexo=1
+            metadata=[]
+            for i in direccion[3].split('_'):
+                i = i.strip()
+                if ' ' in i.strip():
+                    for j in i.split(' '):
+                        if j!='':
+                            metadata.append(j)
+                else:
+                    metadata.append(i)
+                        
+            
+            if sexChar in metadata[0]:
+                sexo.append(metadata.pop(0).strip())
+            else:
                 sexo.append(sexChar)
-            else:
-                sexo.append(temp1[0])
-            marca.append(int(temp1[2-incluyeSexo]))
-            
-            indicadorCaja=temp1[1-incluyeSexo].find('C')
-            if indicadorCaja==-1:
-                print("Error al leer el identificador de caja: "+registro)
-                caja.append(None)
-            else:
-                numCaja=temp1[1-incluyeSexo][indicadorCaja+1:]
-                caja.append(numCaja)
-            
-
-            indicadorBloque=temp1[-1:][0].find('B')
+                # print("Error al leer el sexo del animal: "+registro)
                 
-            if indicadorBloque==-1:
-                print("Error al leer el identificador del bloque: "+registro)
-                bloque.append(None)
+            if 'C' in metadata[0]:
+                caja.append(metadata.pop(0).strip()[1:])
             else:
-                bloque.append(int(temp1[-1:][0][indicadorBloque+1:]))
-            
-            indicadorDia=temp1[-2:-1][0].find('D')
-            if indicadorDia==-1:
-                print("Error al leer el identificador del día: "+registro)
-                diaEnsayo.append(None)
+                caja.append(-1)
+                print("Error al leer el identificador de la caja: "+registro)
+                
+            try:
+                int(metadata[0])
+                marca.append(metadata.pop(0).strip())
+            except:
+                marca.append(-1)
+                print("Error al leer el numero del animal: "+registro)
+                
+            if 'B' in metadata[-1]:
+                bloque.append(metadata.pop().strip()[1:])
             else:
-                diaEnsayo.append(temp1[-2:-1][0][indicadorDia+1:])
+                bloque.append(-1)
+                print("Error al leer el bloque: "+registro)
+                
+            if 'D' in metadata[-1]:
+                diaEnsayo.append(metadata.pop().strip()[1:])
+            else:
+                diaEnsayo.append(-1)
+                print("Error al leer el bloque: "+registro)
             
-            tipo=''
-            for i in temp1[3-incluyeSexo:len(temp1)-2]:
-                tipo+=(i+'_')
-            tipoPrueba.append(tipo[:-1])
+            tipo=""
+            for i in metadata:
+                tipo+=(i.strip()+'_')
+            tipoPrueba.append(tipo.strip()[:-1])
+            
+            if len(direccion)==6:
+                etiqueta.append(direccion[4])
+            else:
+                etiqueta.append('')
+            
             nombreArchivo.append(registro)
             
         except:
-            (registro)
+            print("Error adicional: "+registro)
     d={'dia':dia, 'mes':mes, 'año':año, 'sexo':sexo, 'caja':caja,
        'marca':marca, 'tipoPrueba':tipoPrueba, 'diaEnsayo':diaEnsayo,
-       'bloque':bloque, "nombreArchivo":nombreArchivo}
+       'bloque':bloque, "nombreArchivo":nombreArchivo, 'etiqueta':etiqueta}
     data=pd.DataFrame(data=d)
     return data
 
@@ -147,21 +158,19 @@ def estandarizarTerminosTipoDePrueba(data):
     return cleanData
 
 #-------------------------Extraer los datos------------------------------------
-for i in range(2):
-    hembras= (i%2==0)
-    if hembras:
-        base="D:/Users/USER/OneDrive - Universidad de los Andes/REGISTRO APRENDIZAJE/HEMBRAS/"
-        nombreSalida='registrosHembras.xlsx'
-    else:
-        base="D:/Users/USER/OneDrive - Universidad de los Andes/REGISTRO APRENDIZAJE/MACHOS/"
-        nombreSalida='registrosMachos.xlsx'
+# Se recorre el directorio de las hembras
+base="D:/Users/USER/OneDrive - Universidad de los Andes/REGISTRO APRENDIZAJE/HEMBRAS/"
+nombreSalida='registrosHembras.xlsx'
+estandarizarTerminosTipoDePrueba(listaDeAnimales(listaDeRegistros(base), 'H')).to_excel(nombreSalida)
 
-    # (listaDeAnimales(listaDeRegistros(base)))
-    # Se extrae la información a un archivo de Excel
-    estandarizarTerminosTipoDePrueba(listaDeAnimales(listaDeRegistros(base))).to_excel(nombreSalida)
+# Se recorre el directorio de los machos
+base="D:/Users/USER/OneDrive - Universidad de los Andes/REGISTRO APRENDIZAJE/MACHOS/"
+nombreSalida='registrosMachos.xlsx'
+estandarizarTerminosTipoDePrueba(listaDeAnimales(listaDeRegistros(base), 'M')).to_excel(nombreSalida)
 
+# Se exporta la información a archivos de Excel, uno para hembras, uno para machos y una unión de ambos
 registrosMachos=pd.read_excel("registrosMachos.xlsx", index_col=0)
 registrosHembras=pd.read_excel("registrosHembras.xlsx", index_col=0)
 registros=pd.concat([registrosMachos, registrosHembras], ignore_index=True)
-registros['IdAnimal']=registros['sexo']+"-"+registros['caja']+"-"+registros.marca.map(str)
+registros['IdAnimal']=registros.apply(lambda fila: f"{fila.sexo}-{fila.caja}-{fila.marca}", axis=1)
 registros.to_excel("registrosMachosYHembras.xlsx")
