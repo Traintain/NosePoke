@@ -176,8 +176,8 @@ void loop() {
       Serial.print(category);
       Serial.print(",");
       //Imprime la latencia promedio
-      if(success!=0){
-        temp=latency/success;
+      if(success!=0 || error != 0){
+        temp=latency/(success+error);
       }else{
         temp=0;
       }
@@ -230,8 +230,8 @@ void loop() {
         Serial.print("Categorias: ");
         Serial.println(category);
         Serial.print("La latencia promedio es de: ");
-        if(success!=0){
-          temp=latency/success;
+        if(success!=0 || error!=0){
+          temp=latency/(success+error);
         }else{
           temp=0;
         }
